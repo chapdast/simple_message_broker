@@ -14,6 +14,7 @@ import (
 type channelData struct {
 	channel     chan []byte
 	subscribers uint32
+	srvs        []proto.MessageBroker_SubscribeServer
 }
 type Server struct {
 	channels map[string]*channelData
@@ -42,16 +43,25 @@ func (s *Server) Subscribe(req *proto.SubscribeRequest, srv proto.MessageBroker_
 	if _, ok := s.channels[req.ChannelId]; !ok {
 		return fmt.Errorf("unknown Channel")
 	}
-	s.channels[req.ChannelId].subscribers++
+
+	index := len(s.channels[req.ChannelId].srvs)
+	s.channels[req.ChannelId].srvs = append(s.channels[req.ChannelId].srvs, srv)
+	s.channels[req.ChannelId].subscribers += 1
 	for {
 		select {
 		case <-srv.Context().Done():
-			s.channels[req.ChannelId].subscribers--
+			s.channels[req.ChannelId].subscribers -= 1
+			s.channels[req.ChannelId].srvs[index] = nil
 			return nil
 		case m := <-s.channels[req.ChannelId].channel:
-			srv.SendMsg(&proto.SubscribeResponse{
-				Message: m,
-			})
+			for _, x := range s.channels[req.ChannelId].srvs {
+				if x != nil {
+					x.SendMsg(&proto.SubscribeResponse{
+						Message: m,
+					})
+				}
+			}
+
 		}
 	}
 }
