@@ -1,0 +1,40 @@
+
+syntax = "proto3";
+option go_package = ".;proto";
+
+service MessageBroker {
+  rpc CreateChannel(CreateChannelRequest) returns (CreateChannelResponse) {};
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {};
+  rpc CloseChannel(CloseChannelRequest) returns (CloseChannelResponse) {};
+  rpc Publish(PublishRequest) returns (PublishResponse) {};
+}
+
+message CreateChannelRequest { string channel_id = 1; }
+message CreateChannelResponse {
+  enum CreatationResult {
+    UNSPCIFIED = 0;
+    OK = 1;
+    DUPLICATE = 2;
+  }
+  CreatationResult status = 1;
+}
+
+enum ChannelResult {
+  UNSPECIFIED = 0;
+  OK = 1;
+  UNKOWN_CHANNEL = 2;
+}
+
+message SubscribeRequest { string channel_id = 1; }
+message SubscribeResponse {
+  ChannelResult result = 1;
+  bytes message = 2;
+}
+message CloseChannelRequest { string channel_id = 1; }
+message CloseChannelResponse { ChannelResult result = 1; }
+
+message PublishRequest {
+  string channel_id = 1;
+  bytes message = 2;
+}
+message PublishResponse { ChannelResult result = 1; }
