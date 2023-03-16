@@ -26,7 +26,6 @@ func New(serverAddress string, opts []grpc.DialOption) (*Client, func(), error) 
 			fmt.Errorf("error dialing to server address, %s\n%s", serverAddress, err.Error())
 	}
 	cli := proto.NewMessageBrokerClient(conn)
-	log.Println("CREATE CLIENT to ", serverAddress)
 	return &Client{
 			cli: cli,
 		}, func() {
@@ -35,7 +34,6 @@ func New(serverAddress string, opts []grpc.DialOption) (*Client, func(), error) 
 }
 
 func (c *Client) Create(ctx context.Context, name string) error {
-	log.Println("CREATE CHANNEL", name)
 	resp, err := c.cli.CreateChannel(ctx, &proto.CreateChannelRequest{
 		ChannelId: name,
 	})
@@ -49,7 +47,6 @@ func (c *Client) Create(ctx context.Context, name string) error {
 }
 
 func (c *Client) Subscribe(ctx context.Context, name string, out chan *proto.SubscribeResponse) error {
-	log.Println("SUB CHANNEL", name)
 	stream, err := c.cli.Subscribe(ctx, &proto.SubscribeRequest{
 		ChannelId: name,
 	})
@@ -81,7 +78,6 @@ func (c *Client) Subscribe(ctx context.Context, name string, out chan *proto.Sub
 }
 
 func (c *Client) Publish(ctx context.Context, name string, message []byte) error {
-	log.Println("PUBLISH CHANNEL", name)
 	resp, err := c.cli.Publish(ctx, &proto.PublishRequest{
 		ChannelId: name,
 		Message:   message,
